@@ -37,7 +37,20 @@ class SomaBowser(Level5Mixin, BowserEnemies, luigi.Task):
                            'soma-bowser.txt')
 
     def run(self):
-        NotImplemented
+        bowser_parts = [enemy.to_dict() for enemy in self.enemies]
+        v = []
+        for part in bowser_parts:
+            with tempfile.NamedTemporaryFile(mode='wb') as temp:
+                self.s3_client.get(part.get('enemy_file'), temp.name)
+                with ZipFile(temp.name, 'r') as zipf:
+                    for name in zipf.namelist():
+                        with tempfile.TemporaryDirectory() as tempd:
+                            zipf.extract(name, tempd)
+                            with open(os.path.join(tempd, name), 'rb') as f:
+                                v.append(int(base64.b64decode(f.read())))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class Level5(Level5Mixin, LevelEnemies, luigi.WrapperTask):
