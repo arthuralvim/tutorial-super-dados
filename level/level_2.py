@@ -27,6 +27,14 @@ class Level2Mixin(object):
     level = 'level_2'
 
 
+class ContarGoombas(Level2Mixin, ContarMixin, GoombaEnemies, luigi.Task):
+    count_enemy_name = 'goomba'
+
+
+class ContarGoombasComAsas(Level2Mixin, ContarMixin, GoombaWithWingsEnemies, luigi.Task):
+    count_enemy_name = 'goomba-with-wings'
+
+
 class SomarGoombasSemAsas(Level2Mixin, GoombaEnemies, luigi.Task):
 
     def output(self):
@@ -34,7 +42,15 @@ class SomarGoombasSemAsas(Level2Mixin, GoombaEnemies, luigi.Task):
                            'soma-goombas.txt')
 
     def run(self):
-        NotImplemented
+        goombas = [enemy.to_dict() for enemy in self.enemies]
+
+        v = []
+        for goomba in goombas:
+            with open(goomba.get('enemy_file'), 'r') as f:
+                v.append(int(f.read()))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class SomarGoombasComAsas(Level2Mixin, GoombaWithWingsEnemies, luigi.Task):
@@ -44,7 +60,20 @@ class SomarGoombasComAsas(Level2Mixin, GoombaWithWingsEnemies, luigi.Task):
                            'soma-goombas-com-asas.txt')
 
     def run(self):
-        NotImplemented
+        goombas = [enemy.to_dict() for enemy in self.enemies]
+        v = []
+        goombas_ = []
+
+        for goomba in goombas:
+            with tempfile.NamedTemporaryFile(mode='wb') as temp:
+                self.s3_client.get(goomba.get('enemy_file'), temp.name)
+                with open(temp.name, 'r') as f:
+                    v.append(int(f.read()))
+                goomba.update({'enemy_local_file': temp.name})
+                goombas_.append(goomba)
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class SomarGoombas(Level2Mixin, LevelEnemies, luigi.Task):
@@ -60,14 +89,21 @@ class SomarGoombas(Level2Mixin, LevelEnemies, luigi.Task):
                            f'soma-total-goombas.txt')
 
     def run(self):
-        NotImplemented
+        v = []
+        for i in self.input():
+            with open(i.path, 'r') as f:
+                v.append(int(f.read()))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class Level2(Level2Mixin, LevelEnemies, luigi.WrapperTask):
 
     def requires(self):
         return [
-            # algo parece estar faltando...
+            ContarGoombas(user=USER_TRACKER, difficulty='easy'),
+            ContarGoombasComAsas(user=USER_TRACKER, difficulty='easy'),
             SomarGoombas(user=USER_TRACKER, difficulty='easy')
         ]
 
