@@ -21,24 +21,28 @@ class Level1Mixin(object):
     level = 'level_1'
 
 
-class ContarTijolos(Level1Mixin, LevelEnemies, luigi.Task):
+class ContarMixin(object):
+    count_enemy_name = None
 
     def output(self):
         return LevelTarget(self.user, self.level, self.difficulty,
-                           'quantidade-tijolo.txt')
+                           f'quantidade-{self.count_enemy_name}.txt')
 
     def run(self):
-        NotImplemented
+        filtered_items = [enemy.to_dict()
+                          for enemy in self.enemies
+                          if enemy.enemy_name == self.count_enemy_name]
+
+        with self.output().open('w') as o:
+            o.write(str(len(filtered_items)))
 
 
-class ContarMoedas(Level1Mixin, LevelEnemies, luigi.Task):
+class ContarMoeda(Level1Mixin, ContarMixin, LevelEnemies, luigi.Task):
+    count_enemy_name = 'moeda'
 
-    def output(self):
-        return LevelTarget(self.user, self.level, self.difficulty,
-                           'quantidade-moeda.txt')
 
-    def run(self):
-        NotImplemented
+class ContarTijolos(Level1Mixin, ContarMixin, LevelEnemies, luigi.Task):
+    count_enemy_name = 'tijolo'
 
 
 class SomaMoedas(Level1Mixin, LevelEnemies, luigi.Task):
@@ -48,7 +52,16 @@ class SomaMoedas(Level1Mixin, LevelEnemies, luigi.Task):
                            'soma-moedas.txt')
 
     def run(self):
-        NotImplemented
+        moedas = [enemy.to_dict()
+                  for enemy in self.enemies if enemy.enemy_name == 'moeda']
+
+        valores_moedas = []
+        for m in moedas:
+            with open(m.get('enemy_file'), 'r') as f:
+                valores_moedas.append(int(f.read()))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(valores_moedas)))
 
 
 class Level1(Level1Mixin, LevelEnemies, luigi.WrapperTask):
@@ -56,8 +69,8 @@ class Level1(Level1Mixin, LevelEnemies, luigi.WrapperTask):
     def requires(self):
         return [
             ContarTijolos(user=USER_TRACKER, difficulty='easy'),
-            ContarMoedas(user=USER_TRACKER, difficulty='easy'),
-            SomaMoedas(user=USER_TRACKER, difficulty='easy'),
+            ContarMoeda(user=USER_TRACKER, difficulty='easy'),
+            SomaMoedas(user=USER_TRACKER, difficulty='easy')
         ]
 
 
