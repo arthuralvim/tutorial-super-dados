@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+    database:
+        image: postgres:9.6
+        container_name: database
+        restart: always
+        env_file:
+            - .env
+        expose:
+            - 5432
+        ports:
+            - 5555:5432
+    luigi_scheduler:
+        image: luigischeduler:latest
+        container_name: luigischeduler
+        restart: always
+        env_file:
+            - .env
+        expose:
+            - 8082
+        ports:
+            - 7777:8082
+        links:
+            - database
+        depends_on:
+            - database
