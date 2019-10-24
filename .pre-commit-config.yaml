@@ -1,0 +1,17 @@
+repos:
+- repo: git://github.com/pre-commit/pre-commit-hooks
+  default_language_version:
+    python: python3.6
+  rev: v2.2.1
+  hooks:
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: check-yaml
+    - id: debug-statements
+    - id: detect-private-key
+    - id: double-quote-string-fixer
+    - id: end-of-file-fixer
+    - id: fix-encoding-pragma
+    - id: flake8
+    - id: no-commit-to-branch

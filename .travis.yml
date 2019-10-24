@@ -1,0 +1,36 @@
+# travis-ci
+
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+python:
+  - 3.6
+
+before_install:
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH, TRAVIS_TAG=$TRAVIS_TAG"
+  - pip install pip==18.0
+  - pip install pipenv==2018.11.26
+  - pipenv install --system --dev
+
+script:
+  - make test
+
+after_script:
+  - set -e
+  - docker --version
+
+after_failure:
+  - echo "== end but failed ==""
+
+cache:
+  yarn: true
+  directories:
+    - $HOME/.cache/.pip
+    - $HOME/.cache/.pipenv
+
+notifications:
+  email: false

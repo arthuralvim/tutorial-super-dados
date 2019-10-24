@@ -1,0 +1,27 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+luigi = "*"
+sqlalchemy = "*"
+python-decouple = "*"
+requests = "*"
+boto3 = "*"
+psycopg2 = "*"
+python-json-logger = "*"
+colorama = "*"
+
+[dev-packages]
+pytest = "*"
+pre-commit = "*"
+pytest-sugar = "*"
+pytest-mock = "*"
+pytest-pythonpath = "*"
+pytest-cov = "*"
+ipdb = "*"
+requests-mock = "*"
+
+[requires]
+python_version = "3.6"
