@@ -37,7 +37,14 @@ class SomarHammerBrosSemAsas(Level4Mixin, HammerBrosEnemies, luigi.Task):
                            'soma-hammerbros-sem-asas.txt')
 
     def run(self):
-        NotImplemented
+        hammerbros = [enemy.to_dict() for enemy in self.enemies]
+        v = []
+        for hammerbro in hammerbros:
+            with open(hammerbro.get('enemy_file'), 'rb') as f:
+                v.append(int(base64.b64decode(f.read())))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class SomarHammerBrosComAsa(Level4Mixin, HammerBrosWithWingsEnemies, luigi.Task):
@@ -47,7 +54,16 @@ class SomarHammerBrosComAsa(Level4Mixin, HammerBrosWithWingsEnemies, luigi.Task)
                            'soma-hammerbros-com-asas.txt')
 
     def run(self):
-        NotImplemented
+        hammerbros = [enemy.to_dict() for enemy in self.enemies]
+        v = []
+        for hammerbro in hammerbros:
+            with tempfile.NamedTemporaryFile(mode='wb') as temp:
+                self.s3_client.get(hammerbro.get('enemy_file'), temp.name)
+                with open(temp.name, 'rb') as f:
+                    v.append(int(base64.b64decode(f.read())))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class SomarHammerBros(Level4Mixin, LevelEnemies, luigi.Task):
@@ -63,7 +79,13 @@ class SomarHammerBros(Level4Mixin, LevelEnemies, luigi.Task):
                            f'soma-total-hammerbros.txt')
 
     def run(self):
-        NotImplemented
+        v = []
+        for i in self.input():
+            with open(i.path, 'r') as f:
+                v.append(int(f.read()))
+
+        with self.output().open('w') as o:
+            o.write(str(sum(v)))
 
 
 class Level4(Level4Mixin, LevelEnemies, luigi.WrapperTask):
